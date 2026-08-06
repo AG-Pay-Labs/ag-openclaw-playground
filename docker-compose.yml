@@ -1,0 +1,70 @@
+name: ag-openclaw-playground
+
+x-openclaw-environment: &openclaw-environment
+  HOME: /home/node
+  OPENCLAW_STATE_DIR: /home/node/.openclaw
+  OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+  OPENCLAW_GATEWAY_PORT: "18789"
+  PLAYGROUND_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  AGPAY_API_URL: ${AGPAY_API_URL:-http://127.0.0.1:8000}
+  AGPAY_PROXY_ENABLED: ${AGPAY_PROXY_ENABLED:-1}
+  AGPAY_HOST: ${AGPAY_HOST:-host.docker.internal}
+  AGPAY_HOST_PORT: ${AGPAY_HOST_PORT:-8000}
+  PLAYGROUND_HOST_PORT: ${OPENCLAW_GATEWAY_PORT:-18789}
+
+x-openclaw-volumes: &openclaw-volumes
+  - openclaw-state:/home/node/.openclaw
+  - openclaw-workspace:/home/node/.openclaw/workspace
+  - openclaw-config:/home/node/.config/openclaw
+
+x-openclaw-service: &openclaw-service
+  image: agpay/openclaw-playground:2026.7.1-2
+  init: true
+  environment: *openclaw-environment
+  volumes: *openclaw-volumes
+  extra_hosts:
+    - host.docker.internal:host-gateway
+
+services:
+  openclaw-bootstrap:
+    <<: *openclaw-service
+    build:
+      context: ..
+      dockerfile: ag-openclaw-playground/Dockerfile
+    restart: "no"
+    entrypoint:
+      - /usr/local/bin/openclaw-playground
+    command:
+      - bootstrap
+
+  openclaw-gateway:
+    <<: *openclaw-service
+    restart: unless-stopped
+    depends_on:
+      openclaw-bootstrap:
+        condition: service_completed_successfully
+    entrypoint:
+      - /usr/local/bin/openclaw-playground
+    command:
+      - gateway
+    ports:
+      - 127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}:18789
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch("http://127.0.0.1:18789/readyz")
+          .then((response) => { if (!response.ok) process.exit(1); })
+          .catch(() => process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  openclaw-state:
+  openclaw-workspace:
+  openclaw-config:

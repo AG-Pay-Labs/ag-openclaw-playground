@@ -1,0 +1,21 @@
+# The build context is dev/ so the sibling plugin can be packaged. Keep every
+# other child repository, Git directory, dependency tree, and secret out of it.
+*
+
+!ag-plugin-openclaw/
+ag-plugin-openclaw/*
+!ag-plugin-openclaw/package.json
+!ag-plugin-openclaw/pnpm-lock.yaml
+!ag-plugin-openclaw/pnpm-workspace.yaml
+!ag-plugin-openclaw/tsconfig.json
+!ag-plugin-openclaw/tsconfig.build.json
+!ag-plugin-openclaw/openclaw.plugin.json
+!ag-plugin-openclaw/README.md
+!ag-plugin-openclaw/src/
+!ag-plugin-openclaw/src/**
+
+!ag-openclaw-playground/
+ag-openclaw-playground/*
+!ag-openclaw-playground/scripts/
+ag-openclaw-playground/scripts/*
+!ag-openclaw-playground/scripts/openclaw-playground.sh
