@@ -13,8 +13,10 @@ not duplicate or silently patch plugin behavior. The versioned API in
 
 ## Product and security invariants
 
-- The integration requests supervised approval and may record a confirmed
-  sandbox/external result. It does not charge a card or execute a live payment.
+- The plugin requests supervised approval and receives only sanitized checkout
+  outcomes. For a configured managed proposal, the sibling AG Pay platform's
+  trusted worker may execute checkout; the playground and OpenClaw runtime do
+  not receive Browserbase, issuer, PAN, CVC, or merchant-password secrets.
 - Never accept, store, log, or return raw PAN, CVC, PIN, or 3-D Secure secrets.
 - Never commit `.env`, OpenClaw state, model-provider keys, Gateway tokens,
   pairing tokens, or AG Pay agent bearer tokens.
@@ -25,7 +27,10 @@ not duplicate or silently patch plugin behavior. The versioned API in
 - Bind the host Gateway port to loopback. Container `lan` binding is only for
   Docker port forwarding and must not expose the playground on the host LAN.
 - Keep sandbox result recording disabled by default. Enabling it only records a
-  confirmed external/sandbox result; it never initiates payment.
+  confirmed legacy external/sandbox result; it never initiates managed payment.
+- Keep Browserbase and issuer configuration in `ag-pay-platform`. Never add
+  those secrets to this repository's `.env`, Compose services, or OpenClaw
+  configuration.
 
 ## Required checks
 
@@ -40,4 +45,4 @@ make ps
 `make smoke` includes the image build and requires Docker, a configured `.env`,
 and a healthy Gateway. A reachable AG Pay API and paired agent are required for
 heartbeat/tool calls, but not for proving that the plugin package loads into
-OpenClaw.
+OpenClaw. The smoke test never initiates or proves a purchase.

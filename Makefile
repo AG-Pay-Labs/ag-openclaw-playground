@@ -21,7 +21,10 @@ build: ## Build pinned OpenClaw with the current sibling AG Pay plugin source.
 	@$(COMPOSE) -f $(COMPOSE_FILE) build
 
 up: init ## Build and start the local Gateway; wait until it is healthy.
-	@$(COMPOSE) -f $(COMPOSE_FILE) up -d --build --wait $(GATEWAY_SERVICE)
+	@if ! $(COMPOSE) -f $(COMPOSE_FILE) up -d --build --wait $(GATEWAY_SERVICE); then \
+		$(COMPOSE) -f $(COMPOSE_FILE) logs --no-color --tail=200 openclaw-bootstrap >&2; \
+		exit 1; \
+	fi
 
 down: ## Stop containers while preserving OpenClaw state and secrets.
 	@$(COMPOSE) -f $(COMPOSE_FILE) down
@@ -40,7 +43,7 @@ dashboard: ## Print the local Control UI URL without opening it.
 	@$(COMPOSE) -f $(COMPOSE_FILE) exec $(GATEWAY_SERVICE) \
 		node dist/index.js dashboard --no-open
 
-pair: ## Pair through a hidden prompt and restart with the new SecretRef.
+pair: ## Pair once, or keep the existing private credential without prompting.
 	@$(COMPOSE) -f $(COMPOSE_FILE) exec $(GATEWAY_SERVICE) \
 		openclaw-playground pair
 	@$(MAKE) restart

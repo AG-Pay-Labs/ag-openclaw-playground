@@ -15,6 +15,7 @@ WORKDIR /build/ag-plugin-openclaw
 COPY ag-plugin-openclaw/package.json ag-plugin-openclaw/pnpm-lock.yaml ag-plugin-openclaw/pnpm-workspace.yaml ./
 COPY ag-plugin-openclaw/tsconfig.json ag-plugin-openclaw/tsconfig.build.json ./
 COPY ag-plugin-openclaw/openclaw.plugin.json ag-plugin-openclaw/README.md ./
+COPY ag-plugin-openclaw/assets ./assets
 
 RUN pnpm install --frozen-lockfile
 

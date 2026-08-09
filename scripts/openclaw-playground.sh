@@ -178,6 +178,22 @@ bootstrap() {
 
 pair_agent() {
   ensure_state_directories
+
+  force_pairing=0
+  for argument in "$@"; do
+    if [ "$argument" = "--force" ]; then
+      force_pairing=1
+    fi
+  done
+
+  if [ -f "$agent_token_path" ] && [ "$force_pairing" -eq 0 ]; then
+    configure_agent_token_ref
+    run_openclaw config validate
+    printf '%s\n' \
+      "AG Pay is already paired; kept the existing private credential. Use make re-pair only to replace it."
+    return
+  fi
+
   run_openclaw agpay pair \
     --api-url "${AGPAY_API_URL:-http://127.0.0.1:8000}" \
     --output "$agent_token_path" \

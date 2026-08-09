@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/agpay-mark.png" width="112" alt="AG Pay logo" />
+</p>
+
 # AG Pay OpenClaw Playground
 
 A local Docker playground for running an OpenClaw agent with the sibling AG Pay
@@ -17,9 +21,12 @@ discovery in compatibility mode. This trusts the locally built `agpay` package
 without disabling OpenClaw's normal local runtime surfaces. The bootstrap only
 creates this allowlist when one is absent, so later operator edits are kept.
 
-AG Pay is a supervised control plane. The plugin can request approval and,
-when separately enabled, record a confirmed sandbox/external result. It does
-not charge a card or execute a live payment.
+AG Pay is a supervised control plane. The plugin requests approval and monitors
+sanitized outcomes. When a proposal names a server-configured adapter, the
+sibling platform's trusted worker can execute an allowlisted checkout. All
+Browserbase, issuer, and payment-field handling stays in `ag-pay-platform`;
+neither this playground nor OpenClaw receives those secrets. The separately
+gated result-recording tool remains only for legacy sandbox/external tests.
 
 ## Workspace location
 
@@ -94,11 +101,13 @@ Create or re-pair an agent in the AG Pay web app and copy its one-time
 make pair
 ```
 
-The plugin asks for the token at a hidden prompt. The token is never placed in
-a command argument. The resulting `agt_...` bearer credential is written with
-private permissions inside the persistent OpenClaw state volume, referenced
-through a file-backed SecretRef, and never printed. `make pair` restarts the
-Gateway so the heartbeat and tools use the new reference.
+If no credential exists, the plugin asks for the token at a hidden prompt. The
+token is never placed in a command argument. The resulting `agt_...` bearer
+credential is written with private permissions inside the persistent OpenClaw
+state volume, referenced through a file-backed SecretRef, and never printed.
+When the runtime is already paired, `make pair` keeps that credential and does
+not prompt. In both cases it restarts the Gateway so the heartbeat and tools
+use the reference.
 
 To intentionally replace an existing pairing:
 
@@ -115,19 +124,25 @@ make smoke
 The smoke check builds and starts the stack, inspects the live `agpay` plugin
 runtime, audits SecretRefs, and requires a readable Gateway RPC endpoint. It
 proves that these plugin surfaces are registered; it does not prove pairing,
-API heartbeat, or a completed purchase:
+API heartbeat, a worker connection, or a completed purchase:
 
 - `agpay_request_purchase`;
 - `agpay_get_purchase_request`;
 - `agpay_record_purchase_result` (kept gated by
   `allowSandboxCompletion: false` by default);
 - `openclaw agpay pair`;
-- the AG Pay heartbeat service.
+- the AG Pay heartbeat service; and
+- the AG Pay sanitized outcome-monitor service.
 
 The playground adds only the request and read tools to the default tool
 profile. Recording a result stays unavailable unless an operator explicitly
 enables both the tool policy and `allowSandboxCompletion`; even then it only
-records a confirmed sandbox/external result.
+records a confirmed legacy sandbox/external result. Managed checkout is always
+platform-owned and cannot be initiated by that tool.
+
+Configure `BROWSERBASE_API_KEY`, the Stripe secret, merchant adapters, and the
+checkout worker only in `../ag-pay-platform`. Do not add them to the playground
+`.env`, Docker Compose, OpenClaw configuration, or an agent prompt.
 
 Useful focused commands:
 

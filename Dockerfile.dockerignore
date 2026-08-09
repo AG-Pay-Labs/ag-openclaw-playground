@@ -11,6 +11,8 @@ ag-plugin-openclaw/*
 !ag-plugin-openclaw/tsconfig.build.json
 !ag-plugin-openclaw/openclaw.plugin.json
 !ag-plugin-openclaw/README.md
+!ag-plugin-openclaw/assets/
+!ag-plugin-openclaw/assets/**
 !ag-plugin-openclaw/src/
 !ag-plugin-openclaw/src/**
 
