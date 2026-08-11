@@ -28,6 +28,13 @@ Browserbase, issuer, and payment-field handling stays in `ag-pay-platform`;
 neither this playground nor OpenClaw receives those secrets. The separately
 gated result-recording tool remains only for legacy sandbox/external tests.
 
+The playground configures the plugin's non-secret default checkout pair as
+`stripe-hosted` plus `https://checkout.stripe.com/`. With a matching adapter
+enabled in the sibling platform, an OpenClaw purchase request can omit
+`checkout_adapter` and `checkout_url`: the plugin injects the pair after the
+model supplies the product URL and exact product facts. Explicit checkout fields
+still override the default and must be supplied together.
+
 ## Workspace location
 
 This repository must be cloned beside `ag-plugin-openclaw` under the base
@@ -85,6 +92,13 @@ repositories. On Docker Desktop, the default playground settings forward
 `host.docker.internal:8000` on the host. This loopback bridge preserves the
 plugin rule that plain HTTP is allowed only to an explicit loopback address.
 Do not weaken that plugin rule to make container networking easier.
+
+`AGPAY_DEFAULT_CHECKOUT_ADAPTER` and `AGPAY_DEFAULT_CHECKOUT_URL` in `.env` are
+non-secret platform routing configuration. They must both be set or both be
+empty. Emptying both preserves approval-only behavior for requests that omit
+checkout fields. The default `stripe-hosted` pair requires the sibling platform
+to expose that exact adapter; it does not configure Stripe or Browserbase in
+OpenClaw.
 
 On native Linux Docker, a host process bound only to `127.0.0.1` is usually not
 reachable through the host-gateway address. For local Linux development, bind

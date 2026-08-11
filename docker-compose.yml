@@ -11,6 +11,8 @@ x-openclaw-environment: &openclaw-environment
   AGPAY_PROXY_ENABLED: ${AGPAY_PROXY_ENABLED:-1}
   AGPAY_HOST: ${AGPAY_HOST:-host.docker.internal}
   AGPAY_HOST_PORT: ${AGPAY_HOST_PORT:-8000}
+  AGPAY_DEFAULT_CHECKOUT_ADAPTER: ${AGPAY_DEFAULT_CHECKOUT_ADAPTER-stripe-hosted}
+  AGPAY_DEFAULT_CHECKOUT_URL: ${AGPAY_DEFAULT_CHECKOUT_URL-https://checkout.stripe.com/}
   PLAYGROUND_HOST_PORT: ${OPENCLAW_GATEWAY_PORT:-18789}
 
 x-openclaw-volumes: &openclaw-volumes

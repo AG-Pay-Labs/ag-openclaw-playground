@@ -122,6 +122,25 @@ config_exists() {
   run_openclaw config get "$1" >/dev/null 2>&1
 }
 
+patch_default_checkout_pair() {
+  node -e '
+    const [adapter, checkoutUrl] = process.argv.slice(1);
+    const enabled = adapter.length > 0 && checkoutUrl.length > 0;
+    process.stdout.write(JSON.stringify({
+      plugins: {
+        entries: {
+          agpay: {
+            config: {
+              defaultCheckoutAdapter: enabled ? adapter : null,
+              defaultCheckoutUrl: enabled ? checkoutUrl : null,
+            },
+          },
+        },
+      },
+    }));
+  ' "$1" "$2" | run_openclaw config patch --stdin
+}
+
 configure_agent_token_ref() {
   run_openclaw config set secrets.providers.agpay \
     --provider-source file \
@@ -137,6 +156,21 @@ configure_plugin() {
   run_openclaw config set plugins.entries.agpay.enabled true --strict-json
   run_openclaw config set plugins.entries.agpay.config.apiUrl \
     "${AGPAY_API_URL:-http://127.0.0.1:8000}"
+
+  default_checkout_adapter=${AGPAY_DEFAULT_CHECKOUT_ADAPTER:-}
+  default_checkout_url=${AGPAY_DEFAULT_CHECKOUT_URL:-}
+  if [ -n "$default_checkout_adapter" ] && [ -n "$default_checkout_url" ]; then
+    patch_default_checkout_pair "$default_checkout_adapter" "$default_checkout_url"
+  elif [ -n "$default_checkout_adapter" ] || [ -n "$default_checkout_url" ]; then
+    printf '%s\n' \
+      "AGPAY_DEFAULT_CHECKOUT_ADAPTER and AGPAY_DEFAULT_CHECKOUT_URL must be configured together" >&2
+    exit 1
+  else
+    if config_exists plugins.entries.agpay.config.defaultCheckoutAdapter \
+      || config_exists plugins.entries.agpay.config.defaultCheckoutUrl; then
+      patch_default_checkout_pair "" ""
+    fi
+  fi
 
   if ! config_exists plugins.allow; then
     run_openclaw config set plugins.allow \
